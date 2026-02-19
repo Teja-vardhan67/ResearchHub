@@ -38,13 +38,19 @@ git clone https://github.com/Teja-vardhan67/ResearchHub.git
 cd ResearchHub
 ```
 
-### 2. Database Setup
-Create a PostgreSQL database and enable the vector extension:
-```sql
-CREATE DATABASE researchhub;
-\c researchhub
-CREATE EXTENSION vector;
-```
+### 2. Database Setup (PostgreSQL / Neon)
+This project uses **PostgreSQL** with the `pgvector` extension for vector search.
+
+**Option A: Cloud (Recommended - Neon)**
+1.  Create a free account at [Neon.tech](https://neon.tech).
+2.  Create a new project.
+3.  Copy the **Connection String** (e.g., `postgresql://user:pass@ep-random.neon.tech/neondb`).
+4.  *Note: Neon usually includes `pgvector` by default.*
+
+**Option B: Local PostgreSQL**
+1.  Install PostgreSQL locally.
+2.  Create a database: `CREATE DATABASE researchhub;`
+3.  Enable extension: `CREATE EXTENSION vector;`
 
 ### 3. Backend Setup
 ```bash
@@ -62,7 +68,8 @@ pip install -r requirements.txt
 **Configuration (.env):**
 Create a `.env` file in the `backend` folder:
 ```ini
-DATABASE_URL=postgresql://user:password@localhost/researchhub
+# Example for Neon DB
+DATABASE_URL=postgresql://user:password@ep-random.neon.tech/neondb?sslmode=require
 SECRET_KEY=your_secret_key_here
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
