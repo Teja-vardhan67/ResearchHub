@@ -13,6 +13,12 @@ const Dashboard = () => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    const showNotification = (message: string, type: 'success' | 'error') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 3000);
+    };
 
     // Workspace State
     const [workspaces, setWorkspaces] = useState<any[]>([]);
@@ -100,8 +106,9 @@ const Dashboard = () => {
             setCurrentWorkspace(data);
             setNewWorkspaceName('');
             setShowWorkspaceInput(false);
+            showNotification('Workspace created successfully', 'success');
         } catch (err) {
-            alert('Failed to create workspace');
+            showNotification('Failed to create workspace', 'error');
         }
     };
 
@@ -121,12 +128,12 @@ const Dashboard = () => {
                 const updatedWorkspaces = workspaces.filter(w => w.id !== currentWorkspace.id);
                 setWorkspaces(updatedWorkspaces);
                 setCurrentWorkspace(updatedWorkspaces.length > 0 ? updatedWorkspaces[0] : null);
-                alert('Workspace deleted');
+                showNotification('Workspace deleted', 'success');
             } else {
-                alert('Failed to delete workspace');
+                showNotification('Failed to delete workspace', 'error');
             }
         } catch (err) {
-            alert('Error deleting workspace');
+            showNotification('Error deleting workspace', 'error');
         }
     };
 
@@ -147,13 +154,13 @@ const Dashboard = () => {
                 },
                 body: formData
             });
-            if (!res.ok) alert('Upload failed');
+            if (!res.ok) showNotification('Upload failed', 'error');
             else {
-                alert('Paper uploaded successfully!');
+                showNotification('Paper uploaded successfully!', 'success');
                 fetchPapers();
             }
         } catch (err) {
-            alert('Error uploading paper');
+            showNotification('Error uploading paper', 'error');
         }
         setUploading(false);
     };
@@ -195,7 +202,7 @@ const Dashboard = () => {
             const data = await res.json();
             setSearchResults(data);
         } catch (err) {
-            alert('Search failed');
+            showNotification('Search failed', 'error');
         }
         setSearching(false);
     };
@@ -215,17 +222,24 @@ const Dashboard = () => {
                 })
             });
             if (res.ok) {
-                alert('Paper imported successfully!');
+                showNotification('Paper imported successfully!', 'success');
                 fetchPapers();
             }
-            else alert('Import failed');
+            else showNotification('Import failed', 'error');
         } catch (err) {
-            alert('Error importing paper');
+            showNotification('Error importing paper', 'error');
         }
     };
 
     return (
-        <div className="flex h-screen bg-gray-100">
+        <div className="flex h-screen bg-gray-100 relative">
+            {/* Notification Toast */}
+            {notification && (
+                <div className={`absolute top-4 right-4 z-50 px-6 py-3 rounded shadow-lg text-white font-medium transition-all transform translate-y-0 ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+                    {notification.message}
+                </div>
+            )}
+
             {/* Sidebar */}
             <div className="w-64 bg-white shadow-md flex flex-col">
                 <div className="p-4 border-b">
