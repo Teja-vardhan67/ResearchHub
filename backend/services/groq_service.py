@@ -1,21 +1,21 @@
 import os
-from groq import Groq
+from groq import AsyncGroq
 from dotenv import load_dotenv
 
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-client = Groq(
+client = AsyncGroq(
     api_key=GROQ_API_KEY,
 )
 
-def get_chat_response(messages, model="llama-3.3-70b-versatile", temperature=0.3):
+async def get_chat_response(messages, model="llama-3.3-70b-versatile", temperature=0.3):
     """
     Generates a response from Groq based on the message history.
     """
     try:
-        chat_completion = client.chat.completions.create(
+        chat_completion = await client.chat.completions.create(
             messages=messages,
             model=model,
             temperature=temperature,

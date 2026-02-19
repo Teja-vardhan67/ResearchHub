@@ -155,7 +155,7 @@ async def ask_research_assistant(
     db.commit()
     
     # 3. Get Response
-    response = groq_service.get_chat_response(messages)
+    response = await groq_service.get_chat_response(messages)
     
     # Save Assistant Message
     ai_msg_db = models.ChatMessage(
@@ -198,3 +198,42 @@ def get_papers(
         
     papers = query.order_by(models.Paper.created_at.desc()).all()
     return [{"id": p.id, "title": p.title, "abstract": p.abstract, "authors": p.authors, "created_at": p.created_at} for p in papers]
+
+class CompareRequest(BaseModel):
+    paper_ids: List[int]
+
+@router.post("/compare")
+async def compare_papers(
+    request: CompareRequest,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    # Fetch papers
+    papers = db.query(models.Paper).filter(
+        models.Paper.id.in_(request.paper_ids),
+        models.Paper.owner_id == current_user.id
+    ).all()
+    
+    if len(papers) < 2:
+        raise HTTPException(status_code=400, detail="Select at least 2 papers to compare")
+
+    # Construct Context
+    context = ""
+    for p in papers:
+        context += f"Paper ID {p.id}: {p.title}\nAbstract: {p.abstract}\n\n"
+
+    # Prompt
+    prompt = (
+        "You are a strict academic researcher. Compare the following research papers in a structured Markdown table. "
+        "The table columns should be: 'Feature', followed by the title of each paper. "
+        "The rows should include: 'Core Methodology', 'Key Findings', 'Limitations', and 'Application Area'. "
+        "After the table, provide a 1-sentence 'Verdict' on which paper is better for what purpose.\n\n"
+        f"Papers to Compare:\n{context}"
+    )
+
+    messages = [{"role": "user", "content": prompt}]
+    
+    # Get Response
+    response = await groq_service.get_chat_response(messages)
+    
+    return {"comparison": response}
